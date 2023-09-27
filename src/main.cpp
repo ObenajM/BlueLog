@@ -1,10 +1,6 @@
 #include <Arduino.h>
 #include <Wire.h>
 
-
-#include <Arduino.h>
-#include <Wire.h>
-
 void K_4LD_init(void); // function prototype
 void K_4LD_init(void); // function prototype
 
