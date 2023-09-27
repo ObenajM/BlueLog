@@ -6,23 +6,41 @@ const int ledPin2 =  19;  // Led Azul CAmbio a pin analogo_a3
 
 int EOC = 3;// corresponde al D3
 
+void K_4LD_init(void); // function prototype
+#include <Arduino.h>
+#include <Wire.h>
+
+const int ledPin =  18;    // Led Rojo
+const int ledPin2 =  19;  // Led Azul CAmbio a pin analogo_a3
+
+int EOC = 3;// corresponde al D3
+
+void K_4LD_init(void); // function prototype
+
+void K_4LD_init(void); // function prototype
+char* K_4LD_read(void); // function prototype
+
+void K_4LD_init(void); // function prototype
+
+
 void setup()
 {
-// init Led's
-pinMode(ledPin, OUTPUT);  // rojo
-pinMode(ledPin2, OUTPUT); // azul 
-digitalWrite(ledPin,LOW);   
-digitalWrite(ledPin2,LOW); 
-//pin available 4LD
-pinMode(EOC, INPUT);      // sets the digital pin as output
-/***********************************************************/
-// Open serial communications and wait for port to open: 
-Serial.begin(9600); //normal
-/***********************************************************/
-//init I2C 
-K_4LD_init();// i2c init todo lo anterior
-/***********************************************************/   
+  // init Led's
+  pinMode(ledPin, OUTPUT);  // rojo
+  pinMode(ledPin2, OUTPUT); // azul 
+  digitalWrite(ledPin,LOW);   
+  digitalWrite(ledPin2,LOW); 
+  //pin available 4LD
+  pinMode(EOC, INPUT);      // sets the digital pin as output
+  /***********************************************************/
+  // Open serial communications and wait for port to open: 
+  Serial.begin(9600); //normal
+  /***********************************************************/
+  //init I2C 
+  K_4LD_init();// i2c init todo lo anterior
+  /***********************************************************/   
 }
+
 
 /*************************--inicial loop---*******************************/  
 
@@ -92,27 +110,28 @@ char* K_4LD_read(void)
     e = Wire.read(); // receive a byte as character
      }
    Wire.endTransmission();
-     
-  //Calculo profundidad en Bares
-  Pressure=(Pressure|b)<<8;
-  Pressure=(Pressure|c);
-  unsigned long Psr_aux =(Pressure-16384)*3.0;//en long 32bits
-  float PsrSea=(Psr_aux/32768.0);// en float para coger las decimas
-  dtostrf(PsrSea,7,6,box_PsrSea);
-
-  //Calculo Temperatura
-  Temp=(Temp|d)<<8;
-  Temp=(Temp|e);
-  unsigned long  int Temp_aux=(Temp/16);// en float para coger las decimas
-  float TempSea=((Temp_aux-24)*0.05)-50;
-  dtostrf(TempSea,7,6,box_TempSea);
-
-  sprintf(box_4LD,box_TempSea);
-  strcat (box_4LD,tab);
-  strcat (box_4LD,box_PsrSea);
-
-
-  pad=&box_4LD[0];
-  return pad;
-
 }
+//     
+//  //Calculo profundidad en Bares
+//  Pressure=(Pressure|b)<<8;
+//  Pressure=(Pressure|c);
+//  unsigned long Psr_aux =(Pressure-16384)*3.0;//en long 32bits
+//  float PsrSea=(Psr_aux/32768.0);// en float para coger las decimas
+//  dtostrf(PsrSea,7,6,box_PsrSea);
+//
+//  //Calculo Temperatura
+//  Temp=(Temp|d)<<8;
+//  Temp=(Temp|e);
+//  unsigned long  int Temp_aux=(Temp/16);// en float para coger las decimas
+//  float TempSea=((Temp_aux-24)*0.05)-50;
+//  dtostrf(TempSea,7,6,box_TempSea);
+//
+//  sprintf(box_4LD,box_TempSea);
+//  strcat (box_4LD,tab);
+//  strcat (box_4LD,box_PsrSea);
+//
+//
+//  pad=&box_4LD[0];
+//  return pad;
+//}
+
