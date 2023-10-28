@@ -205,20 +205,26 @@
 //}
 
 
-// Código ultimo
+// Código ultimo funcionando con SD y RTC
 #include <Wire.h>
 #include <math.h>
 #include "FS.h"
 #include "SD.h"
 #include "SPI.h"
+#include "time.h"
+#include <RTClib.h> // incluye libreria para el manejo del modulo RTC
 
-#define SCK  18
-#define MISO  19
-#define MOSI  23
-#define CS  5
+RTC_DS3231 rtc;     // crea objeto del tipo RTC_DS3231
 
 const int Sensor_Address = 0x77; // Dirección I2C del sensor
 int EOC = 3;//
+
+
+
+// Timer variables
+unsigned long lastTime = 0;
+unsigned long timerDelay = 1000;
+
 String dataMessage;
 
 
@@ -248,13 +254,10 @@ void initSDCard(){
   Serial.printf("SD Card Size: %lluMB\n", cardSize);
 }
 
-
-
 // Write to the SD card
 void writeFile(fs::FS &fs, const char * path, const char * message) {
   Serial.printf("Writing file: %s\n", path);
-
-  File file = fs.open(path, FILE_WRITE);
+File file = fs.open(path, FILE_WRITE);
   if(!file) {
     Serial.println("Failed to open file for writing");
     return;
@@ -266,7 +269,6 @@ void writeFile(fs::FS &fs, const char * path, const char * message) {
   }
   file.close();
 }
-
 
 // Append data to the SD card
 void appendFile(fs::FS &fs, const char * path, const char * message) {
@@ -286,26 +288,35 @@ void appendFile(fs::FS &fs, const char * path, const char * message) {
 }
 
 
+
 void setup() {
   Wire.begin(); // Iniciar la comunicación I2C
   Serial.begin(115200);
+  
+   if (! rtc.begin()) {       // si falla la inicializacion del modulo
+ Serial.println("Modulo RTC no encontrado !");  // muestra mensaje de error
+ while (1);         // bucle infinito que detiene ejecucion del programa
+ }
+ //rtc.adjust(DateTime(__DATE__, __TIME__)); // funcion que permite establecer fecha y horario
+
+
   initSDCard();
-  // If the data.txt file doesn't exist
+   // If the data.txt file doesn't exist
   // Create a file on the SD card and write the data labels
   File file = SD.open("/data.txt");
   if(!file) {
     Serial.println("File doesn't exist");
     Serial.println("Creating file...");
-    writeFile(SD, "/data.txt", "Epoch Time, Temperature, Humidity, Pressure \r\n");
+    writeFile(SD, "/data.txt", "Epoch Time, Temperature, Pressure \r\n");
   }
   else {
     Serial.println("File already exists");  
   }
-  file.close();
+  file.close(); // arreglar
 }
 
 void loop() {
-
+  if ((millis() - lastTime) > timerDelay) {
   // Iniciar la comunicación con el sensor Keller PA-4LD 
   Wire.beginTransmission(Sensor_Address);
   Wire.write(0xAC); // Comando para iniciar la lectura de presión
@@ -334,23 +345,18 @@ void loop() {
     float TempSea = ((Tb/16-24)*0.05)-50;
     
   // Mostrar las variables en el puerto serie
-  Serial.print("PsrSea: ");
-  Serial.print(PsrSea,3);
-  Serial.println(" bar");
 
-  Serial.print("TempSea: ");
-  Serial.print(TempSea,2);
-  Serial.println(" °C");
-  Serial.println();  // Salto de línea para separar las muestras
+ DateTime fecha = rtc.now();        // funcion que devuelve fecha y horario en formato
+              // DateTime y asigna a variable fecha
   
-    //Concatenate all info separated by commas
-    dataMessage = String(PsrSea) + "," + String(TempSea)+ "\r\n";
-    Serial.print("Saving data: ");
-    Serial.println(dataMessage);
+   //Concatenate all info separated by commas
+  dataMessage = String(fecha.day()) + "/" + String(fecha.month()) + "/" + String(fecha.year()) + "/" + String(fecha.hour()) +  ":" + String(fecha.minute()) + ":" + String(fecha.second()) + "," + String(TempSea) +  "," + String(PsrSea)+ "\r\n";
+  Serial.print("Saving data: ");
+  Serial.println(dataMessage);
 
-    //Append the data to file
-    appendFile(SD, "/data.txt", dataMessage.c_str());
+  //Append the data to file
+  appendFile(SD, "/data.txt", dataMessage.c_str());
+  lastTime = millis(); 
   }
-
-  delay(1500); // Esperar 1.5 segundos antes de la siguiente lectura
+ }
 }
